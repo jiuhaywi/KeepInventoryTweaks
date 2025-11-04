@@ -17,22 +17,22 @@ Keep Inventory Tweaks is a Bukkit/Paper plugin for Minecraft that enhances the d
 
 ## Commands
 
-### `/keepinventory update <player> <true|false>`
+### `/keep_player_inventory update <player> <true|false>`
 - Toggles the KeepInventory state for a player.  
 - Only available to **OPs or users with `keepinventory.update` permission**.  
 - Examples: 
-```/keepinventory update Notch true``` will ensure Notch does not lose items upon death.
+```/keep_player_inventory update Notch true``` will ensure Notch does not lose items upon death.
 
 
-### `/keepinventory check [player]`
+### `/keep_player_inventory check [player]`
 - Checks your own KeepInventory state or another player's.  
 - Only OPs or users with permission can check other players.  
 - If no player is specified, defaults to checking your own state.  
 - Examples: 
 
-``` /keepinventory check ``` will return your current keepinventory state.
+``` /keep_player_inventory check ``` will return your current keepinventory state.
 
-``` /keepinventory check Notch ``` will return Notch's current keepinventory state.
+``` /keep_player_inventory check Notch ``` will return Notch's current keepinventory state.
 
 
 
