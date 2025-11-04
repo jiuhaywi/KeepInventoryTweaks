@@ -26,22 +26,19 @@ public class PlayerDeathHandler implements Listener {
         if (!keepInv) {
             Location deathLoc = player.getLocation();
 
-            // Drop main inventory
+
             for (ItemStack item : player.getInventory().getContents()) {
                 if (item != null) deathLoc.getWorld().dropItemNaturally(deathLoc, item);
             }
 
-            // Drop armor
             for (ItemStack item : player.getInventory().getArmorContents()) {
                 if (item != null) deathLoc.getWorld().dropItemNaturally(deathLoc, item);
             }
 
-            // Drop extra contents (off-hand, etc)
             for (ItemStack item : player.getInventory().getExtraContents()) {
                 if (item != null) deathLoc.getWorld().dropItemNaturally(deathLoc, item);
             }
 
-            // Clear inventory to avoid duplication
             player.getInventory().clear();
             player.getInventory().setArmorContents(null);
             player.getInventory().setExtraContents(null);

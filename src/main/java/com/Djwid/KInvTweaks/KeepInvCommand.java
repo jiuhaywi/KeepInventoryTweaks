@@ -79,7 +79,6 @@ public class KeepInvCommand implements CommandExecutor, TabCompleter {
             UUID targetUUID;
             String targetName;
 
-            // Check your own state if no arguments or if only one arg
             if (args.length == 1) {
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(ChatColor.RED + "Console must specify a player: /keepinventory check <player>");
@@ -89,13 +88,10 @@ public class KeepInvCommand implements CommandExecutor, TabCompleter {
                 targetUUID = player.getUniqueId();
                 targetName = player.getName();
             } else {
-                // Player specified
                 targetName = args[1];
                 targetUUID = Bukkit.getOfflinePlayer(targetName).getUniqueId();
 
-                // Only allow checking others if sender is OP or has permission
                 if (!sender.hasPermission("keepinventory.update") && !sender.isOp()) {
-                    // If the target is yourself, allow
                     if (!(sender instanceof Player && ((Player) sender).getUniqueId().equals(targetUUID))) {
                         sender.sendMessage(ChatColor.RED + "You cannot check other players' KeepInventory.");
                         return true;
@@ -121,7 +117,6 @@ public class KeepInvCommand implements CommandExecutor, TabCompleter {
             completions.add("update");
             completions.add("check");
         } else if (args.length == 2) {
-            // Suggest online players
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (p.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                     completions.add(p.getName());
