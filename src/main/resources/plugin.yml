@@ -1,0 +1,12 @@
+name: KeepInventoryTweaks
+main: com.Djwid.KInvTweaks.KeepInventoryTweaks
+version: 0.1
+api-version: 1.21
+description: Tweaking the in game Keep-Inventory.
+author: Djwid
+commands:
+  keep_player_inventory:
+    description: Toggle KeepInventory for each player.
+    usage: /keep_player_inventory <update/check> <player> [true|false]
+    permission: keep_player_inventory.update
+    permission-message: "You don't have permission to use this command."
