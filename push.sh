@@ -2,7 +2,7 @@
 
 # Optional: commit message as argument, otherwise default message
 COMMIT_MSG=${1:-"Auto-commit $(date +"%Y-%m-%d %H:%M:%S")"}
-
+git pull origin main --rebase
 # Stage all changes
 git add .
 
