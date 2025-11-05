@@ -1,5 +1,5 @@
 
-# Keep Inventory Tweaks
+# Keep Inventory Tweaks <img src="branding/icon.png" width="48" alt="KeepInventoryTweaks Icon" align="right">
 
 Keep Inventory Tweaks is a Bukkit/Paper plugin for Minecraft that enhances the default `KeepInventory` gamerule. It allows server owners to **fully customize who keeps their inventory** on death, with support for per-player toggles, offline players, and world-global behavior. The plugin is designed to be **safe, flexible, and easy to use**, even with Geyser setups.
 
