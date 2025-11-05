@@ -1,67 +1,139 @@
-
 package com.Djwid.KInvTweaks.data;
 
 import com.Djwid.KInvTweaks.KeepInventoryTweaks;
-import com.Djwid.KInvTweaks.util.JsonUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.*;
 
 public class PluginDataManager {
 
     private final KeepInventoryTweaks plugin;
     private final File dataFolder;
-    private final File pluginConfigFile;
+    private final File playersFile;
+    private final File disabledPlayersFile;
 
-    private Set<UUID> enabledPlayers;
+    private final Map<UUID, String> allPlayers = new HashMap<>();
+    private final Set<UUID> disabledKeepInv = new HashSet<>();
 
     public PluginDataManager(KeepInventoryTweaks plugin) {
         this.plugin = plugin;
-        this.dataFolder = new File(plugin.getDataFolder(), "players");
-        this.pluginConfigFile = new File(plugin.getDataFolder(), "settings.json");
-
-        if (!plugin.getDataFolder().exists()) plugin.getDataFolder().mkdirs();
+        this.dataFolder = new File(plugin.getDataFolder(), "data");
         if (!dataFolder.exists()) dataFolder.mkdirs();
 
-        loadPluginSettings();
-    }
+        this.playersFile = new File(dataFolder, "players.json");
+        this.disabledPlayersFile = new File(dataFolder, "disabled_players.json");
 
-    public void loadPluginSettings() {
-        if (pluginConfigFile.exists()) {
-            PluginSettings settings = JsonUtils.readJson(pluginConfigFile, PluginSettings.class);
-            if (settings != null) {
-                enabledPlayers = new HashSet<>(settings.enabledPlayers);
-                return;
+        loadAllData();
+
+        // Register join listener for auto-tracking
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler
+            public void onJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+                registerPlayer(event.getPlayer());
             }
-        }
-        enabledPlayers = new HashSet<>();
-        savePluginSettings();
+        }, plugin);
     }
 
-    public void savePluginSettings() {
-        PluginSettings settings = new PluginSettings(enabledPlayers);
-        JsonUtils.writeJson(pluginConfigFile, settings);
+    private void loadAllData() {
+        loadPlayers();
+        loadDisabledPlayers();
+    }
+
+    private void loadPlayers() {
+        if (!playersFile.exists()) return;
+        try {
+            String content = Files.readString(playersFile.toPath());
+            if (!content.isEmpty()) {
+                JSONObject obj = new JSONObject(content);
+                for (String key : obj.keySet()) {
+                    allPlayers.put(UUID.fromString(key), obj.getString(key));
+                }
+            }
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to load players.json: " + e.getMessage());
+        }
+    }
+
+    private void loadDisabledPlayers() {
+        if (!disabledPlayersFile.exists()) return;
+        try {
+            String content = Files.readString(disabledPlayersFile.toPath());
+            if (!content.isEmpty()) {
+                JSONArray arr = new JSONArray(content);
+                for (int i = 0; i < arr.length(); i++) {
+                    disabledKeepInv.add(UUID.fromString(arr.getString(i)));
+                }
+            }
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to load disabled_players.json: " + e.getMessage());
+        }
+    }
+
+    public void registerPlayer(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (!allPlayers.containsKey(uuid)) {
+            allPlayers.put(uuid, player.getName());
+            savePlayers();
+            plugin.getLogger().info("Registered new player: " + player.getName() + " (" + uuid + ")");
+        }
     }
 
     public boolean isKeepInventoryEnabled(UUID uuid) {
-        return enabledPlayers.contains(uuid);
+        return !disabledKeepInv.contains(uuid);
     }
+
+    public Map<UUID, String> getAllPlayers() {
+    return Collections.unmodifiableMap(allPlayers);
+    }
+
 
     public void setKeepInventoryEnabled(UUID uuid, boolean enabled) {
-        if (enabled) enabledPlayers.add(uuid);
-        else enabledPlayers.remove(uuid);
-        savePluginSettings();
+        if (enabled) {
+            disabledKeepInv.remove(uuid);
+        } else {
+            disabledKeepInv.add(uuid);
+        }
+        saveDisabledPlayers();
+
+        // Make sure player is tracked in players.json
+        OfflinePlayer off = Bukkit.getOfflinePlayer(uuid);
+        if (off != null && off.getName() != null) {
+            allPlayers.putIfAbsent(uuid, off.getName());
+            savePlayers();
+        }
     }
 
-    private static class PluginSettings {
-        public Set<UUID> enabledPlayers;
+    public void savePluginSettings() {
+        savePlayers();
+        saveDisabledPlayers();
+    }
 
-        public PluginSettings() {}
-        public PluginSettings(Set<UUID> enabledPlayers) {
-            this.enabledPlayers = enabledPlayers;
+    private void savePlayers() {
+        try {
+            JSONObject obj = new JSONObject();
+            for (Map.Entry<UUID, String> entry : allPlayers.entrySet()) {
+                obj.put(entry.getKey().toString(), entry.getValue());
+            }
+            Files.writeString(playersFile.toPath(), obj.toString(4));
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save players.json: " + e.getMessage());
+        }
+    }
+
+    private void saveDisabledPlayers() {
+        try {
+            JSONArray arr = new JSONArray();
+            for (UUID uuid : disabledKeepInv) arr.put(uuid.toString());
+            Files.writeString(disabledPlayersFile.toPath(), arr.toString(4));
+        } catch (IOException e) {
+            plugin.getLogger().severe("Failed to save disabled_players.json: " + e.getMessage());
         }
     }
 }
